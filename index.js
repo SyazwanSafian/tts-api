@@ -295,6 +295,10 @@ app.use((error, req, res, next) => {
     });
 });
 
+app.get('/', (req, res) => {
+    res.send(' Welcome to the TTS API!');
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`TTS API server running on port ${PORT}`);
