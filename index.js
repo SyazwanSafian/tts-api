@@ -27,12 +27,11 @@ app.use(express.text());
 
 // Configure multer for file uploads
 const upload = multer({
-    dest: 'temp_uploads/',
+    storage: multer.memoryStorage(),
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB limit
+        fileSize: 10 * 1024 * 1024 // still keep your 10MB limit
     },
     fileFilter: (req, file, cb) => {
-        // Only allow PDF and TXT files
         const allowedTypes = ['application/pdf', 'text/plain'];
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
@@ -42,24 +41,24 @@ const upload = multer({
     }
 });
 
-// Helper function to extract text from uploaded files
-async function extractTextFromFile(filePath, mimetype) {
+
+// Helper function to extract text from buffer
+async function extractTextFromBuffer(buffer, mimetype) {
     try {
         if (mimetype === 'application/pdf') {
-            const dataBuffer = await fs.readFile(filePath);
-            const data = await pdf(dataBuffer);
+            const data = await pdf(buffer);
             return data.text;
         } else if (mimetype === 'text/plain') {
-            const text = await fs.readFile(filePath, 'utf8');
-            return text;
+            return buffer.toString('utf-8');
         } else {
             throw new Error('Unsupported file type');
         }
     } catch (error) {
-        console.error('Error extracting text from file:', error);
+        console.error('Error extracting text from buffer:', error);
         throw error;
     }
 }
+
 
 // Helper function to generate unique filename
 function generateFileName(userId, type = 'audio') {
@@ -70,7 +69,6 @@ function generateFileName(userId, type = 'audio') {
 
 // POST /convert - Convert text or file to audio
 app.post('/convert', upload.single('file'), async (req, res) => {
-    let tempFilePath = null;
 
     try {
         const { userId } = req.body;
@@ -88,18 +86,18 @@ app.post('/convert', upload.single('file'), async (req, res) => {
 
         // Handle file upload
         if (req.file) {
-            tempFilePath = req.file.path;
+            const buffer = req.file.buffer;
             originalFileName = req.file.originalname;
 
-            // Extract text from uploaded file
-            textContent = await extractTextFromFile(tempFilePath, req.file.mimetype);
+            // Determine input type
             inputType = req.file.mimetype === 'application/pdf' ? 'pdf' : 'txt';
 
-            // Upload original file to Firebase Storage
-            const fileBuffer = await fs.readFile(tempFilePath);
-            const storageFileName = `uploads/${generateFileName(userId, 'original')}.${inputType}`;
-            originalFileUrl = await uploadFile(storageFileName, fileBuffer, req.file.mimetype);
+            // Extract text from uploaded buffer
+            textContent = await extractTextFromBuffer(buffer, req.file.mimetype);
 
+            // Upload original file to Firebase Storage
+            const storageFileName = `uploads/${generateFileName(userId, 'original')}.${inputType}`;
+            originalFileUrl = await uploadFile(storageFileName, buffer, req.file.mimetype);
         } else if (req.body.text) {
             // Handle direct text input
             textContent = req.body.text;
@@ -109,6 +107,7 @@ app.post('/convert', upload.single('file'), async (req, res) => {
                 error: 'No text or file provided'
             });
         }
+
 
         // Validate text content
         if (!textContent.trim()) {
@@ -166,7 +165,7 @@ app.post('/convert', upload.single('file'), async (req, res) => {
         // Clean up temporary file
         if (tempFilePath) {
             try {
-                await fs.unlink(tempFilePath);
+
             } catch (cleanupError) {
                 console.error('Error cleaning up temp file:', cleanupError);
             }
