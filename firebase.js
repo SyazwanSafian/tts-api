@@ -2,7 +2,14 @@
 
 //-----ADMIN SDK Setup, different than Front End which uses Client SDK Setup-------//
 const admin = require('firebase-admin');
-const serviceAccount = require('./tts-service-account.json');
+let serviceAccount;
+if (process.env.GOOGLE_SERVICE_ACCOUNT) {
+    // Production (Vercel) - use environment variable
+    serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+} else {
+    // Local development - use file
+    serviceAccount = require('./tts-service-account.json');
+}
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
