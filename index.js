@@ -6,6 +6,8 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 const pdf = require('pdf-parse');
+const { db, storage } = require('./firebase');
+
 
 // Import our custom modules
 const {
