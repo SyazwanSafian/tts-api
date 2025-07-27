@@ -140,6 +140,8 @@ app.post('/convert', upload.single('file'), async (req, res) => {
             textLength: textContent.length
         };
 
+        console.log("Saving conversion to Firestore for:", userId);
+        console.log("conversionData to be saved:", conversionData);
         const conversionId = await saveConversion(userId, conversionData);
 
         console.log(`Conversion completed for user ${userId}, ID: ${conversionId}`);
