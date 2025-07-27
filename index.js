@@ -164,7 +164,6 @@ app.post('/convert', upload.single('file'), async (req, res) => {
             message: error.message
         });
     }
-
 });
 
 // GET /conversions/:userId - Get all conversions for a user
@@ -208,15 +207,14 @@ app.delete('/conversions/:userId/:conversionId', async (req, res) => {
             });
         }
 
-        // First, get the conversion data to find associated files
-        const conversions = await getConversions(userId);
-        const conversion = conversions.find(c => c.id === conversionId);
+        const docRef = db.collection('users').doc(userId).collection('conversions').doc(conversionId);
+        const doc = await docRef.get();
 
-        if (!conversion) {
-            return res.status(404).json({
-                error: 'Conversion not found'
-            });
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Conversion not found' });
         }
+
+        const conversion = doc.data();
 
         // Delete associated files from storage
         const filesToDelete = [];
