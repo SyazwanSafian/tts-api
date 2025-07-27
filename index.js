@@ -163,16 +163,8 @@ app.post('/convert', upload.single('file'), async (req, res) => {
             error: 'Conversion failed',
             message: error.message
         });
-    } finally {
-        // Clean up temporary file
-        if (tempFilePath) {
-            try {
-
-            } catch (cleanupError) {
-                console.error('Error cleaning up temp file:', cleanupError);
-            }
-        }
     }
+
 });
 
 // GET /conversions/:userId - Get all conversions for a user
