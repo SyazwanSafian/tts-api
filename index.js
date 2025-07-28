@@ -73,7 +73,7 @@ function generateFileName(userId, type = 'audio') {
 app.post('/convert', upload.single('file'), async (req, res) => {
 
     try {
-        const { userId } = req.body;
+        const { userId, voiceName } = req.body;
 
         if (!userId) {
             return res.status(400).json({
@@ -90,18 +90,13 @@ app.post('/convert', upload.single('file'), async (req, res) => {
         if (req.file) {
             const buffer = req.file.buffer;
             originalFileName = req.file.originalname;
-
-            // Determine input type
             inputType = req.file.mimetype === 'application/pdf' ? 'pdf' : 'txt';
-
-            // Extract text from uploaded buffer
             textContent = await extractTextFromBuffer(buffer, req.file.mimetype);
 
             // Upload original file to Firebase Storage
             const storageFileName = `uploads/${generateFileName(userId, 'original')}.${inputType}`;
             originalFileUrl = await uploadFile(storageFileName, buffer, req.file.mimetype);
         } else if (req.body.text) {
-            // Handle direct text input
             textContent = req.body.text;
             inputType = 'text';
         } else {
@@ -109,7 +104,6 @@ app.post('/convert', upload.single('file'), async (req, res) => {
                 error: 'No text or file provided'
             });
         }
-
 
         // Validate text content
         if (!textContent.trim()) {
@@ -124,11 +118,10 @@ app.post('/convert', upload.single('file'), async (req, res) => {
             });
         }
 
-        // Generate unique audio filename
+        const selectedVoice = voiceName || "en-US-Wavenet-D";
         const audioFileName = `audio/${generateFileName(userId, 'audio')}.mp3`;
 
-        // Convert text to audio and save
-        const audioResult = await convertAndSaveAudio(textContent, audioFileName);
+        const audioResult = await convertAndSaveAudio(textContent, audioFileName, selectedVoice);
 
         // Save conversion record to Firestore
         const conversionData = {
@@ -139,16 +132,12 @@ app.post('/convert', upload.single('file'), async (req, res) => {
             audioUrl: audioResult.audioUrl,
             status: 'completed',
             completedAt: new Date(),
-            textLength: textContent.length
+            textLength: textContent.length,
+            voiceName: selectedVoice
         };
 
-        console.log("Saving conversion to Firestore for:", userId);
-        console.log("conversionData to be saved:", conversionData);
         const conversionId = await saveConversion(userId, conversionData);
 
-        console.log(`Conversion completed for user ${userId}, ID: ${conversionId}`);
-
-        // Send response
         res.json({
             success: true,
             conversionId: conversionId,
@@ -160,7 +149,6 @@ app.post('/convert', upload.single('file'), async (req, res) => {
 
     } catch (error) {
         console.error('Conversion error:', error);
-
         res.status(500).json({
             error: 'Conversion failed',
             message: error.message

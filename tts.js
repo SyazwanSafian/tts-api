@@ -13,16 +13,16 @@ const client = new textToSpeech.TextToSpeechClient({
 });
 
 // Main conversion function
-async function convertTextToAudio(text, fileName) {
+async function convertTextToAudio(text, fileName, voiceName = "en-US-Wavenet-D") {
     try {
         // Configure the TTS request
         const request = {
-            input: { text: text },
+            input: { text },
             voice: {
-                languageCode: 'en-US',
-                ssmlGender: 'NEUTRAL',
-                name: 'en-US-Wavenet-D'
+                name: voiceName, // e.g., "en-GB-Wavenet-B"
+                languageCode: voiceName.split("-").slice(0, 2).join("-") // "en-GB"
             },
+
             audioConfig: {
                 audioEncoding: 'MP3',
                 effectsProfileId: ['small-bluetooth-speaker-class-device'],
