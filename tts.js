@@ -66,7 +66,7 @@ async function saveAudioFile(audioBuffer, fileName) {
 }
 
 // Combined function - convert text and save to storage
-async function convertAndSaveAudio(text, fileName) {
+async function convertAndSaveAudio(text, fileName, voiceName = "fil-PH-Wavenet-A") {
     try {
         // Step 1: Convert text to audio buffer
         const audioBuffer = await convertTextToAudio(text, fileName);
