@@ -118,7 +118,7 @@ app.post('/convert', upload.single('file'), async (req, res) => {
             });
         }
 
-        const selectedVoice = voiceName || "en-US-Wavenet-D";
+        const selectedVoice = voiceName || "fil-PH-Wavenet-A";
         const audioFileName = `audio/${generateFileName(userId, 'audio')}.mp3`;
 
         const audioResult = await convertAndSaveAudio(textContent, audioFileName, selectedVoice);

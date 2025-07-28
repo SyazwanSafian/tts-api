@@ -19,7 +19,7 @@ async function convertTextToAudio(text, fileName, voiceName = "en-US-Wavenet-D")
         const request = {
             input: { text },
             voice: {
-                name: voiceName, // e.g., "en-GB-Wavenet-B"
+                name: voiceName,
                 languageCode: voiceName.split("-").slice(0, 2).join("-") // "en-GB"
             },
 
