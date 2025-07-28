@@ -8,8 +8,6 @@ const path = require('path');
 const pdf = require('pdf-parse');
 const { db, storage } = require('./firebase');
 
-
-// Import our custom modules
 const {
     saveConversion,
     getConversions,
@@ -69,9 +67,9 @@ function generateFileName(userId, type = 'audio') {
     return `${type}_${userId}_${timestamp}_${random}`;
 }
 
+
 // POST /convert - Convert text or file to audio
 app.post('/convert', upload.single('file'), async (req, res) => {
-
     try {
         const { userId, voiceName } = req.body;
 
@@ -118,7 +116,7 @@ app.post('/convert', upload.single('file'), async (req, res) => {
             });
         }
 
-        const selectedVoice = voiceName || "fil-PH-Wavenet-A";
+        const selectedVoice = voiceName || "en-US-Wavenet-D";
         const audioFileName = `audio/${generateFileName(userId, 'audio')}.mp3`;
 
         const audioResult = await convertAndSaveAudio(textContent, audioFileName, selectedVoice);

@@ -15,14 +15,16 @@ const client = new textToSpeech.TextToSpeechClient({
 // Main conversion function
 async function convertTextToAudio(text, fileName, voiceName = "en-US-Wavenet-D") {
     try {
+        // Extract language code from voice name
+        const languageCode = voiceName.split('-').slice(0, 2).join('-');
+
         // Configure the TTS request
         const request = {
             input: { text },
             voice: {
                 name: voiceName,
-                languageCode: voiceName.split("-").slice(0, 2).join("-") // "en-GB"
+                languageCode: languageCode
             },
-
             audioConfig: {
                 audioEncoding: 'MP3',
                 effectsProfileId: ['small-bluetooth-speaker-class-device'],
@@ -31,7 +33,9 @@ async function convertTextToAudio(text, fileName, voiceName = "en-US-Wavenet-D")
             }
         };
 
-        console.log(`Converting text to audio: ${text.substring(0, 50)}...`);
+        console.log(`Converting text to audio with voice: ${voiceName}`);
+        console.log(`Language code: ${languageCode}`);
+        console.log(`Text preview: ${text.substring(0, 50)}...`);
 
         // Call Google TTS API
         const [response] = await client.synthesizeSpeech(request);
@@ -44,6 +48,7 @@ async function convertTextToAudio(text, fileName, voiceName = "en-US-Wavenet-D")
 
     } catch (error) {
         console.error('Error converting text to audio:', error);
+        console.error('Voice that caused error:', voiceName);
         throw error;
     }
 }
@@ -66,10 +71,12 @@ async function saveAudioFile(audioBuffer, fileName) {
 }
 
 // Combined function - convert text and save to storage
-async function convertAndSaveAudio(text, fileName, voiceName = "fil-PH-Wavenet-A") {
+async function convertAndSaveAudio(text, fileName, voiceName = "en-US-Wavenet-D") {
     try {
-        // Step 1: Convert text to audio buffer
-        const audioBuffer = await convertTextToAudio(text, fileName);
+        console.log(`Starting conversion process with voice: ${voiceName}`);
+
+        // Step 1: Convert text to audio buffer - passing voiceName parameter
+        const audioBuffer = await convertTextToAudio(text, fileName, voiceName);
 
         // Step 2: Save audio buffer to Firebase Storage
         const audioUrl = await saveAudioFile(audioBuffer, fileName);
@@ -78,13 +85,19 @@ async function convertAndSaveAudio(text, fileName, voiceName = "fil-PH-Wavenet-A
             success: true,
             audioUrl: audioUrl,
             fileName: fileName,
-            audioSize: audioBuffer.length
+            audioSize: audioBuffer.length,
+            voiceUsed: voiceName
         };
 
     } catch (error) {
         console.error('Error in convert and save process:', error);
+        console.error('Voice that caused error in convertAndSaveAudio:', voiceName);
         throw error;
     }
 }
 
-module.exports = { convertTextToAudio, saveAudioFile, convertAndSaveAudio };
+module.exports = {
+    convertTextToAudio,
+    saveAudioFile,
+    convertAndSaveAudio
+};
